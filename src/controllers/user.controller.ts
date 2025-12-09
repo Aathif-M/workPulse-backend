@@ -15,6 +15,16 @@ export const createUser = async (req: AuthRequest, res: Response) => {
             return res.status(400).json({ message: 'User already exists' });
         }
 
+        // Permission Check: Only Super Admin can create Admins
+        if (role === 'ADMIN' && req.userRole !== 'SUPER_ADMIN') {
+            return res.status(403).json({ message: 'Only Super Admins can create Admins' });
+        }
+
+        // Permission Check: Managers cannot create Super Admins (obviously) or Admins
+        if (role === 'SUPER_ADMIN') {
+            return res.status(403).json({ message: 'Cannot create Super Admin' });
+        }
+
         const defaultPassword = 'meta@147';
         const hashedPassword = await bcrypt.hash(defaultPassword, 10);
 
@@ -42,13 +52,23 @@ export const createUser = async (req: AuthRequest, res: Response) => {
 export const getUsers = async (req: AuthRequest, res: Response) => {
     try {
         const { userRole } = req;
-        let whereClause: any = { role: 'AGENT' };
 
-        if (userRole === 'SUPER_ADMIN') {
+        // VISIBILITY RULES
+        // 1. Agents see NO ONE.
+        if (userRole === 'AGENT') {
+            return res.json([]);
+        }
+
+        let whereClause: any = {};
+
+        // 2. Managers & Admins see: Agents, Managers, Admins (Everything EXCEPT Super Admin)
+        if (userRole === 'MANAGER' || userRole === 'ADMIN') {
             whereClause = {
-                role: { in: ['AGENT', 'MANAGER'] }
+                role: { in: ['AGENT', 'MANAGER', 'ADMIN'] }
             };
         }
+
+        // 3. Super Admin sees EVERYONE (No filter needed, sees Super Admins too)
 
         const users = await prisma.user.findMany({
             where: whereClause,
@@ -71,10 +91,25 @@ export const getUsers = async (req: AuthRequest, res: Response) => {
     }
 };
 
-export const updateUser = async (req: Request, res: Response) => {
+export const updateUser = async (req: AuthRequest, res: Response) => {
     try {
         const { id } = req.params;
         const { name, email, role, assignedBreaks } = req.body;
+        const requestingRole = req.userRole;
+
+        const targetUser = await prisma.user.findUnique({ where: { id: parseInt(id) } });
+        if (!targetUser) return res.status(404).json({ message: "User not found" });
+
+        // PROTECT HIGH-LEVEL ROLES
+        // If target is ADMIN or SUPER_ADMIN, only SUPER_ADMIN can edit
+        if ((targetUser.role === 'ADMIN' || targetUser.role === 'SUPER_ADMIN') && requestingRole !== 'SUPER_ADMIN') {
+            return res.status(403).json({ message: "Access Denied: Cannot modify this user" });
+        }
+
+        // Prevent Manager from promoting someone to Admin/SuperAdmin
+        if ((role === 'ADMIN' || role === 'SUPER_ADMIN') && requestingRole !== 'SUPER_ADMIN') {
+            return res.status(403).json({ message: "Access Denied: Cannot assign this role" });
+        }
 
         const user = await prisma.user.update({
             where: { id: parseInt(id) },
@@ -95,9 +130,18 @@ export const updateUser = async (req: Request, res: Response) => {
     }
 };
 
-export const deleteUser = async (req: Request, res: Response) => {
+export const deleteUser = async (req: AuthRequest, res: Response) => {
     try {
         const { id } = req.params;
+
+        const targetUser = await prisma.user.findUnique({ where: { id: parseInt(id) } });
+        if (!targetUser) return res.status(404).json({ message: "User not found" });
+
+        // PROTECT HIGH-LEVEL ROLES
+        if ((targetUser.role === 'ADMIN' || targetUser.role === 'SUPER_ADMIN') && req.userRole !== 'SUPER_ADMIN') {
+            return res.status(403).json({ message: "Access Denied: Cannot delete this user" });
+        }
+
         await prisma.user.delete({ where: { id: parseInt(id) } });
         res.json({ message: 'User deleted' });
     } catch (error) {
@@ -106,9 +150,18 @@ export const deleteUser = async (req: Request, res: Response) => {
     }
 };
 
-export const resetPassword = async (req: Request, res: Response) => {
+export const resetPassword = async (req: AuthRequest, res: Response) => {
     try {
         const { id } = req.params;
+
+        const targetUser = await prisma.user.findUnique({ where: { id: parseInt(id) } });
+        if (!targetUser) return res.status(404).json({ message: "User not found" });
+
+        // PROTECT HIGH-LEVEL ROLES
+        if ((targetUser.role === 'ADMIN' || targetUser.role === 'SUPER_ADMIN') && req.userRole !== 'SUPER_ADMIN') {
+            return res.status(403).json({ message: "Access Denied: Cannot reset password for this user" });
+        }
+
         const defaultPassword = 'meta@147';
         const hashedPassword = await bcrypt.hash(defaultPassword, 10);
 

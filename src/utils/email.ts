@@ -39,6 +39,7 @@ export const sendViolationEmail = async (
             <p><strong>Expected Duration:</strong> ${data.expectedDuration} minutes</p>
             <p><strong>Actual Duration:</strong> ${data.actualDuration} minutes</p>
             <p style="color: #d9534f; font-weight: bold;"><strong>Violation Overstay:</strong> ${data.violationDuration} minutes</p>
+            <p>Log in to <a href="https://workpulse.us">WorkPulse</a> for more details.</p>
             <br />
             <p><em>WorkPulse System</em></p>
         </div>

@@ -1,4 +1,4 @@
-// npx ts-node backend/scripts/createUser.ts - to run script
+// npx ts-node scripts/createUser.ts - to run script
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 
@@ -6,10 +6,10 @@ const prisma = new PrismaClient();
 
 // Configuration for the new user
 const USER_CONFIG = {
-    name: 'New User',
-    email: 'newuser@example.com',
+    name: 'TeeBeeU',
+    email: 'it@metacorptech.com',
     password: 'meta@147',
-    role: 'AGENT', // 'AGENT', 'MANAGER', 'SUPER_ADMIN'
+    role: 'SUPER_ADMIN', // 'AGENT', 'MANAGER', 'SUPER_ADMIN'
     breakTypeIds: [] as number[], // Array of break IDs to assign (e.g., [1, 2])
     // If empty and role is AGENT, they might get all breaks depending on logic, or none.
     // Our strict logic says: if alignedBreaks is empty, they have access to NONE (if we strictly follow the new logic)

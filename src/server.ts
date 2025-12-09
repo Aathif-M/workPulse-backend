@@ -18,8 +18,9 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "*", // Allow all for now, restrict in production
-    methods: ["GET", "POST"]
+    origin: "https://workpulse.us", // Allow all for now, restrict in production
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
   }
 });
 
@@ -29,9 +30,9 @@ app.set('io', io);
 app.use(cors());
 app.use(express.json());
 
-app.use('/api/auth', authRoutes);
-app.use('/api/users', userRoutes);
-app.use('/api/breaks', breakRoutes);
+app.use(['/api/auth', '/auth'], authRoutes);
+app.use(['/api/users', '/users'], userRoutes);
+app.use(['/api/breaks', '/breaks'], breakRoutes);
 
 // Basic route
 app.get('/', (req: Request, res: Response) => {

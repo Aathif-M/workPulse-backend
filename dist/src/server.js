@@ -21,17 +21,18 @@ const app = (0, express_1.default)();
 const server = http_1.default.createServer(app);
 const io = new socket_io_1.Server(server, {
     cors: {
-        origin: "*", // Allow all for now, restrict in production
-        methods: ["GET", "POST"]
+        origin: "https://workpulse.us", // Allow all for now, restrict in production
+        credentials: true,
+        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
     }
 });
 // Make io available in routes
 app.set('io', io);
 app.use((0, cors_1.default)());
 app.use(express_1.default.json());
-app.use('/api/auth', auth_routes_1.default);
-app.use('/api/users', user_routes_1.default);
-app.use('/api/breaks', break_routes_1.default);
+app.use(['/api/auth', '/auth'], auth_routes_1.default);
+app.use(['/api/users', '/users'], user_routes_1.default);
+app.use(['/api/breaks', '/breaks'], break_routes_1.default);
 // Basic route
 app.get('/', (req, res) => {
     res.send('WorkPulse API is running');

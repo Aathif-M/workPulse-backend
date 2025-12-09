@@ -16,8 +16,9 @@ const app = (0, express_1.default)();
 const server = http_1.default.createServer(app);
 const io = new socket_io_1.Server(server, {
     cors: {
-        origin: "*", // Allow all for now, restrict in production
-        methods: ["GET", "POST"]
+        origin: "https://workpulse.us", // Allow all for now, restrict in production
+        credentials: true,
+        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
     }
 });
 // Make io available in routes

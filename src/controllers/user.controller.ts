@@ -102,7 +102,7 @@ export const updateUser = async (req: AuthRequest, res: Response) => {
 
         // PROTECT HIGH-LEVEL ROLES
         // If target is ADMIN or SUPER_ADMIN, only SUPER_ADMIN can edit
-        if ((targetUser.role === 'ADMIN' || targetUser.role === 'SUPER_ADMIN') && requestingRole !== 'SUPER_ADMIN') {
+        if (((targetUser.role as any) === 'ADMIN' || (targetUser.role as any) === 'SUPER_ADMIN') && requestingRole !== 'SUPER_ADMIN') {
             return res.status(403).json({ message: "Access Denied: Cannot modify this user" });
         }
 
@@ -138,7 +138,7 @@ export const deleteUser = async (req: AuthRequest, res: Response) => {
         if (!targetUser) return res.status(404).json({ message: "User not found" });
 
         // PROTECT HIGH-LEVEL ROLES
-        if ((targetUser.role === 'ADMIN' || targetUser.role === 'SUPER_ADMIN') && req.userRole !== 'SUPER_ADMIN') {
+        if (((targetUser.role as any) === 'ADMIN' || (targetUser.role as any) === 'SUPER_ADMIN') && req.userRole !== 'SUPER_ADMIN') {
             return res.status(403).json({ message: "Access Denied: Cannot delete this user" });
         }
 
@@ -158,7 +158,7 @@ export const resetPassword = async (req: AuthRequest, res: Response) => {
         if (!targetUser) return res.status(404).json({ message: "User not found" });
 
         // PROTECT HIGH-LEVEL ROLES
-        if ((targetUser.role === 'ADMIN' || targetUser.role === 'SUPER_ADMIN') && req.userRole !== 'SUPER_ADMIN') {
+        if (((targetUser.role as any) === 'ADMIN' || (targetUser.role as any) === 'SUPER_ADMIN') && req.userRole !== 'SUPER_ADMIN') {
             return res.status(403).json({ message: "Access Denied: Cannot reset password for this user" });
         }
 

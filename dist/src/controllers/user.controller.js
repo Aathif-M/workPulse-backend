@@ -54,14 +54,18 @@ const getUsers = async (req, res) => {
         if (userRole === 'AGENT') {
             return res.json([]);
         }
-        let whereClause = {};
+        let whereClause = {
+            id: { not: req.userId }
+        };
         // 2. Managers & Admins see: Agents, Managers, Admins (Everything EXCEPT Super Admin)
         if (userRole === 'MANAGER' || userRole === 'ADMIN') {
-            whereClause = {
-                role: { in: ['AGENT', 'MANAGER', 'ADMIN'] }
-            };
+            whereClause.role = { in: ['AGENT', 'MANAGER', 'ADMIN'] };
         }
-        // 3. Super Admin sees EVERYONE (No filter needed, sees Super Admins too)
+        // 3. Super Admin sees EVERYONE (But NOT other Super Admins, and NOT themselves)
+        // Since 'themselves' is also a Super Admin, we just exclude all Super Admins.
+        if (userRole === 'SUPER_ADMIN') {
+            whereClause.role = { not: 'SUPER_ADMIN' };
+        }
         const users = await prisma.user.findMany({
             where: whereClause,
             include: {

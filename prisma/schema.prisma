@@ -11,6 +11,7 @@ enum Role {
   AGENT
   MANAGER
   SUPER_ADMIN
+  ADMIN
 }
 
 enum BreakStatus {

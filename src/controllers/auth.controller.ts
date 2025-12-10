@@ -77,14 +77,14 @@ export const logout = async (req: AuthRequest, res: Response) => {
 export const updatePassword = async (req: AuthRequest, res: Response) => {
     try {
         const userId = req.userId;
-        const { newPassword } = req.body;
+        const { oldPassword, newPassword } = req.body;
 
         if (!userId) {
             return res.status(401).json({ message: "Unauthorized" });
         }
 
-        if (!newPassword) {
-            return res.status(400).json({ message: "New password required" });
+        if (!oldPassword || !newPassword) {
+            return res.status(400).json({ message: "Both old and new passwords are required" });
         }
 
         // 1. Find user
@@ -94,7 +94,7 @@ export const updatePassword = async (req: AuthRequest, res: Response) => {
         }
 
         // 2. Compare old password
-        const isMatch = await bcrypt.compare("meta@147", user.password);
+        const isMatch = await bcrypt.compare(oldPassword, user.password);
         if (!isMatch) {
             return res.status(400).json({ message: "Old password is incorrect" });
         }

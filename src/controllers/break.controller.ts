@@ -11,8 +11,18 @@ const prisma = new PrismaClient();
 export const createBreakType = async (req: Request, res: Response) => {
     try {
         const { name, duration } = req.body;
+
+        if (!name || !duration) {
+            return res.status(400).json({ message: 'Name and duration are required' });
+        }
+
+        const durationInt = parseInt(duration);
+        if (isNaN(durationInt) || durationInt <= 0) {
+            return res.status(400).json({ message: 'Duration must be a positive number' });
+        }
+
         const breakType = await prisma.breakType.create({
-            data: { name, duration: parseInt(duration) },
+            data: { name, duration: durationInt },
         });
         res.status(201).json(breakType);
     } catch (error) {
@@ -34,15 +44,49 @@ export const updateBreakType = async (req: Request, res: Response) => {
             return res.status(404).json({ message: "Break type not found" });
         }
 
+        let durationInt = breakType.duration;
+        if (duration !== undefined) {
+            const parsed = parseInt(duration);
+            if (isNaN(parsed) || parsed <= 0) {
+                return res.status(400).json({ message: 'Duration must be a positive number' });
+            }
+            durationInt = parsed;
+        }
+
         const updated = await prisma.breakType.update({
             where: { id: parseInt(id) },
             data: {
                 name: name ?? breakType.name,
-                duration: duration ? parseInt(duration) : breakType.duration
+                duration: durationInt
             }
         });
 
         res.json(updated);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Server error" });
+    }
+};
+
+export const deleteBreakType = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+
+        const breakType = await prisma.breakType.findUnique({
+            where: { id: parseInt(id) }
+        });
+
+        if (!breakType) {
+            return res.status(404).json({ message: "Break type not found" });
+        }
+
+        // Soft delete by setting isActive to false
+        const deleted = await prisma.breakType.update({
+            where: { id: parseInt(id) },
+            data: { isActive: false }
+        });
+
+        res.json({ message: "Break type deleted successfully", breakType: deleted });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: "Server error" });

@@ -5,10 +5,10 @@ import bcrypt from 'bcryptjs';
 const prisma = new PrismaClient();
 
 const USERS = [
-    { name: 'Super Admin', email: 'na-weed@gmail.com', role: 'SUPER_ADMIN' },
-    { name: 'Manager User', email: 'manager@test.com', role: 'MANAGER' },
-    { name: 'Admin User', email: 'admin@test.com', role: 'ADMIN' },
-    { name: 'Agent User', email: 'agent@test.com', role: 'AGENT' }
+    { name: 'Super Admin', email: 'aathifm99@gmail.com', role: 'SUPER_ADMIN' },
+    { name: 'Manager', email: 'manager@test.com', role: 'MANAGER' },
+    { name: 'Admin', email: 'admin@test.com', role: 'ADMIN' },
+    { name: 'Agent', email: 'agent@test.com', role: 'AGENT' }
 ];
 
 async function main() {
@@ -21,7 +21,7 @@ async function main() {
                 where: { email: u.email },
                 update: {
                     name: u.name,
-                    role: u.role as any,
+                    role: u.role as any, // Cast to any to avoid TS issues if enum mismatch slightly
                 },
                 create: {
                     name: u.name,

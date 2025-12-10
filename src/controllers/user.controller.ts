@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Role } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import { AuthRequest } from './auth.controller';
 
@@ -16,12 +16,12 @@ export const createUser = async (req: AuthRequest, res: Response) => {
         }
 
         // Permission Check: Only Super Admin can create Admins
-        if (role === 'ADMIN' && req.userRole !== 'SUPER_ADMIN') {
+        if (role === Role.ADMIN && req.userRole !== Role.SUPER_ADMIN) {
             return res.status(403).json({ message: 'Only Super Admins can create Admins' });
         }
 
         // Permission Check: Managers cannot create Super Admins (obviously) or Admins
-        if (role === 'SUPER_ADMIN') {
+        if (role === Role.SUPER_ADMIN) {
             return res.status(403).json({ message: 'Cannot create Super Admin' });
         }
 
@@ -33,7 +33,7 @@ export const createUser = async (req: AuthRequest, res: Response) => {
                 name,
                 email,
                 password: hashedPassword,
-                role: role || 'AGENT',
+                role: role || Role.AGENT,
                 mustChangePassword: true,
                 createdById: req.userId,
                 allowedBreaks: assignedBreaks ? {
@@ -55,7 +55,7 @@ export const getUsers = async (req: AuthRequest, res: Response) => {
 
         // VISIBILITY RULES
         // 1. Agents see NO ONE.
-        if (userRole === 'AGENT') {
+        if (userRole === Role.AGENT) {
             return res.json([]);
         }
 
@@ -64,14 +64,13 @@ export const getUsers = async (req: AuthRequest, res: Response) => {
         };
 
         // 2. Managers & Admins see: Agents, Managers, Admins (Everything EXCEPT Super Admin)
-        if (userRole === 'MANAGER' || userRole === 'ADMIN') {
-            whereClause.role = { in: ['AGENT', 'MANAGER', 'ADMIN'] };
+        if (userRole === Role.MANAGER || userRole === Role.ADMIN) {
+            whereClause.role = { in: [Role.AGENT, Role.MANAGER, Role.ADMIN] };
         }
 
-        // 3. Super Admin sees EVERYONE (But NOT other Super Admins, and NOT themselves)
-        // Since 'themselves' is also a Super Admin, we just exclude all Super Admins.
-        if (userRole === 'SUPER_ADMIN') {
-            whereClause.role = { not: 'SUPER_ADMIN' };
+        // 3. Super Admin sees EVERYONE (But NOT other Super Admins [security choice], and NOT themselves)
+        if (userRole === Role.SUPER_ADMIN) {
+            whereClause.role = { not: Role.SUPER_ADMIN };
         }
 
         const users = await prisma.user.findMany({
@@ -106,12 +105,12 @@ export const updateUser = async (req: AuthRequest, res: Response) => {
 
         // PROTECT HIGH-LEVEL ROLES
         // If target is ADMIN or SUPER_ADMIN, only SUPER_ADMIN can edit
-        if (((targetUser.role as any) === 'ADMIN' || (targetUser.role as any) === 'SUPER_ADMIN') && requestingRole !== 'SUPER_ADMIN') {
+        if ((targetUser.role === Role.ADMIN || targetUser.role === Role.SUPER_ADMIN) && requestingRole !== Role.SUPER_ADMIN) {
             return res.status(403).json({ message: "Access Denied: Cannot modify this user" });
         }
 
         // Prevent Manager from promoting someone to Admin/SuperAdmin
-        if ((role === 'ADMIN' || role === 'SUPER_ADMIN') && requestingRole !== 'SUPER_ADMIN') {
+        if ((role === Role.ADMIN || role === Role.SUPER_ADMIN) && requestingRole !== Role.SUPER_ADMIN) {
             return res.status(403).json({ message: "Access Denied: Cannot assign this role" });
         }
 
@@ -142,7 +141,7 @@ export const deleteUser = async (req: AuthRequest, res: Response) => {
         if (!targetUser) return res.status(404).json({ message: "User not found" });
 
         // PROTECT HIGH-LEVEL ROLES
-        if (((targetUser.role as any) === 'ADMIN' || (targetUser.role as any) === 'SUPER_ADMIN') && req.userRole !== 'SUPER_ADMIN') {
+        if ((targetUser.role === Role.ADMIN || targetUser.role === Role.SUPER_ADMIN) && req.userRole !== Role.SUPER_ADMIN) {
             return res.status(403).json({ message: "Access Denied: Cannot delete this user" });
         }
 

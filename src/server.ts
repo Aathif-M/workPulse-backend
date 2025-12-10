@@ -27,7 +27,13 @@ const io = new Server(server, {
 // Make io available in routes
 app.set('io', io);
 
-app.use(cors());
+// CORS configuration
+app.use(cors({
+  origin: ['https://workpulse.us', 'https://www.workpulse.us', 'http://localhost:5173', 'http://localhost:3000'],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin']
+}));
 app.use(express.json());
 
 app.use(['/api/auth', '/auth'], authRoutes);

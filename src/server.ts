@@ -13,6 +13,8 @@ import authRoutes from './routes/auth.routes';
 import userRoutes from './routes/user.routes';
 import breakRoutes from './routes/break.routes';
 import { initScheduler } from './utils/violationScheduler';
+import { initAutoLogoutScheduler } from './utils/scheduler';
+
 
 const app = express();
 const server = http.createServer(app);
@@ -88,4 +90,7 @@ server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
   // Initialize violation scheduler for ongoing sessions
   initScheduler().catch(e => console.error('Violation scheduler init failed:', e));
+
+  // Initialize Auto-Logout Scheduler
+  initAutoLogoutScheduler(io);
 });

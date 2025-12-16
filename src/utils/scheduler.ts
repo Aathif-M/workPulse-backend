@@ -11,8 +11,8 @@ const TIMEZONE = 'Asia/Colombo';
 export const initAutoLogoutScheduler = (io: Server) => {
     console.log('Initializing Auto-Logout Scheduler...');
 
-    // Job 1: 15:20 LK Time - Logout users NOT on break (TEST)
-    cron.schedule('20 15 * * *', async () => {
+    // Job 1: 18:30 LK Time - Logout users NOT on break
+    cron.schedule('30 18 * * *', async () => {
         console.log('Running 20:30 Auto-Logout Job');
         try {
             // Find users who are online and NOT on an active break
@@ -47,8 +47,8 @@ export const initAutoLogoutScheduler = (io: Server) => {
         timezone: TIMEZONE
     });
 
-    // Job 2: 15:22 LK Time - Warn users on break (TEST)
-    cron.schedule('22 15 * * *', async () => {
+    // Job 2: 18:55 LK Time - Warn users on break
+    cron.schedule('55 18 * * *', async () => {
         console.log('Running 20:55 Break Warning Job');
         try {
             // Find users currently on break
@@ -72,8 +72,8 @@ export const initAutoLogoutScheduler = (io: Server) => {
         timezone: TIMEZONE
     });
 
-    // Job 3: 15:24 LK Time - Force End Breaks & Logout Everyone (TEST)
-    cron.schedule('24 15 * * *', async () => {
+    // Job 3: 19:00 LK Time - Force End Breaks & Logout Everyone
+    cron.schedule('0 19 * * *', async () => {
         console.log('Running 21:00 Force Logout Job');
         try {
             // 1. End all active breaks

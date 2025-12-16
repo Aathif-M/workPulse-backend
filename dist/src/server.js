@@ -28,7 +28,13 @@ const io = new socket_io_1.Server(server, {
 });
 // Make io available in routes
 app.set('io', io);
-app.use((0, cors_1.default)());
+// CORS configuration
+app.use((0, cors_1.default)({
+    origin: ['https://workpulse.us', 'https://www.workpulse.us', 'http://localhost:5173', 'http://localhost:3000'],
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin']
+}));
 app.use(express_1.default.json());
 app.use(['/api/auth', '/auth'], auth_routes_1.default);
 app.use(['/api/users', '/users'], user_routes_1.default);

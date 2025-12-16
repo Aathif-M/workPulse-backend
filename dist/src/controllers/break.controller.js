@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getAllHistory = exports.getHistory = exports.endBreak = exports.startBreak = exports.getBreakTypes = exports.updateBreakType = exports.createBreakType = void 0;
+exports.getAllHistory = exports.getHistory = exports.endBreak = exports.startBreak = exports.getBreakTypes = exports.deleteBreakType = exports.updateBreakType = exports.createBreakType = void 0;
 const client_1 = require("@prisma/client");
 const email_1 = require("../utils/email");
 const violationScheduler_1 = require("../utils/violationScheduler");
@@ -9,8 +9,15 @@ const prisma = new client_1.PrismaClient();
 const createBreakType = async (req, res) => {
     try {
         const { name, duration } = req.body;
+        if (!name || !duration) {
+            return res.status(400).json({ message: 'Name and duration are required' });
+        }
+        const durationInt = parseInt(duration);
+        if (isNaN(durationInt) || durationInt <= 0) {
+            return res.status(400).json({ message: 'Duration must be a positive number' });
+        }
         const breakType = await prisma.breakType.create({
-            data: { name, duration: parseInt(duration) },
+            data: { name, duration: durationInt },
         });
         res.status(201).json(breakType);
     }
@@ -30,11 +37,19 @@ const updateBreakType = async (req, res) => {
         if (!breakType) {
             return res.status(404).json({ message: "Break type not found" });
         }
+        let durationInt = breakType.duration;
+        if (duration !== undefined) {
+            const parsed = parseInt(duration);
+            if (isNaN(parsed) || parsed <= 0) {
+                return res.status(400).json({ message: 'Duration must be a positive number' });
+            }
+            durationInt = parsed;
+        }
         const updated = await prisma.breakType.update({
             where: { id: parseInt(id) },
             data: {
                 name: name ?? breakType.name,
-                duration: duration ? parseInt(duration) : breakType.duration
+                duration: durationInt
             }
         });
         res.json(updated);
@@ -45,6 +60,28 @@ const updateBreakType = async (req, res) => {
     }
 };
 exports.updateBreakType = updateBreakType;
+const deleteBreakType = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const breakType = await prisma.breakType.findUnique({
+            where: { id: parseInt(id) }
+        });
+        if (!breakType) {
+            return res.status(404).json({ message: "Break type not found" });
+        }
+        // Soft delete by setting isActive to false
+        const deleted = await prisma.breakType.update({
+            where: { id: parseInt(id) },
+            data: { isActive: false }
+        });
+        res.json({ message: "Break type deleted successfully", breakType: deleted });
+    }
+    catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Server error" });
+    }
+};
+exports.deleteBreakType = deleteBreakType;
 const getBreakTypes = async (req, res) => {
     try {
         const { userId, userRole } = req;

@@ -67,12 +67,12 @@ exports.logout = logout;
 const updatePassword = async (req, res) => {
     try {
         const userId = req.userId;
-        const { newPassword } = req.body;
+        const { oldPassword, newPassword } = req.body;
         if (!userId) {
             return res.status(401).json({ message: "Unauthorized" });
         }
-        if (!newPassword) {
-            return res.status(400).json({ message: "New password required" });
+        if (!oldPassword || !newPassword) {
+            return res.status(400).json({ message: "Both old and new passwords are required" });
         }
         // 1. Find user
         const user = await prisma.user.findUnique({ where: { id: userId } });
@@ -80,7 +80,7 @@ const updatePassword = async (req, res) => {
             return res.status(404).json({ message: "User not found" });
         }
         // 2. Compare old password
-        const isMatch = await bcryptjs_1.default.compare("meta@147", user.password);
+        const isMatch = await bcryptjs_1.default.compare(oldPassword, user.password);
         if (!isMatch) {
             return res.status(400).json({ message: "Old password is incorrect" });
         }

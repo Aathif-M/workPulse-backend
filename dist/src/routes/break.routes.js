@@ -11,6 +11,7 @@ router.use(auth_controller_1.verifyToken);
 // Break Types
 router.post('/types', break_controller_1.createBreakType);
 router.put('/types/:id', break_controller_1.updateBreakType);
+router.delete('/types/:id', break_controller_1.deleteBreakType);
 router.get('/types', break_controller_1.getBreakTypes);
 // Sessions
 router.post('/start', break_controller_1.startBreak);

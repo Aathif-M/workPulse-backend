@@ -5,13 +5,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const break_controller_1 = require("../controllers/break.controller");
-const auth_controller_1 = require("../controllers/auth.controller");
+const auth_middleware_1 = require("../middleware/auth.middleware");
 const router = express_1.default.Router();
-router.use(auth_controller_1.verifyToken);
+router.use(auth_middleware_1.verifyToken);
 // Break Types
-router.post('/types', break_controller_1.createBreakType);
-router.put('/types/:id', break_controller_1.updateBreakType);
-router.delete('/types/:id', break_controller_1.deleteBreakType);
+router.post('/types', auth_middleware_1.hasWriteAccess, break_controller_1.createBreakType);
+router.put('/types/:id', auth_middleware_1.hasWriteAccess, break_controller_1.updateBreakType);
+router.delete('/types/:id', auth_middleware_1.hasWriteAccess, break_controller_1.deleteBreakType);
 router.get('/types', break_controller_1.getBreakTypes);
 // Sessions
 router.post('/start', break_controller_1.startBreak);

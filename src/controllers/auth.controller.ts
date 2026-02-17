@@ -2,14 +2,9 @@ import { Request, Response, NextFunction } from 'express';
 import { PrismaClient, User } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { AuthRequest } from '../types';
 
 const prisma = new PrismaClient();
-
-// Extend Request to include userId and userRole
-export interface AuthRequest extends Request {
-    userId?: number;
-    userRole?: string;
-}
 
 export const login = async (req: Request, res: Response) => {
     try {
@@ -119,15 +114,4 @@ export const updatePassword = async (req: AuthRequest, res: Response) => {
     }
 };
 
-export const verifyToken = (req: AuthRequest, res: Response, next: NextFunction) => {
-    const token = req.headers['authorization']?.split(' ')[1];
-    if (!token) return res.status(401).json({ message: 'No token provided' });
 
-    jwt.verify(token, process.env.JWT_SECRET as string, (err, decoded) => {
-        if (err) return res.status(403).json({ message: 'Failed to authenticate token' });
-        const payload = decoded as { id: number; role: string };
-        req.userId = payload.id;
-        req.userRole = payload.role;
-        next();
-    });
-};

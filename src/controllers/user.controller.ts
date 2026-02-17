@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { PrismaClient, Role } from '@prisma/client';
 import bcrypt from 'bcryptjs';
-import { AuthRequest } from './auth.controller';
+import { AuthRequest } from '../types';
 
 const prisma = new PrismaClient();
 
@@ -25,7 +25,10 @@ export const createUser = async (req: AuthRequest, res: Response) => {
             return res.status(403).json({ message: 'Cannot create Super Admin' });
         }
 
-        const defaultPassword = 'meta@147';
+        if (!process.env.DEFAULT_USER_PASSWORD) {
+            return res.status(500).json({ message: 'Server configuration error: Default password not set' });
+        }
+        const defaultPassword = process.env.DEFAULT_USER_PASSWORD;
         const hashedPassword = await bcrypt.hash(defaultPassword, 10);
 
         const user = await prisma.user.create({
@@ -165,7 +168,10 @@ export const resetPassword = async (req: AuthRequest, res: Response) => {
             return res.status(403).json({ message: "Access Denied: Cannot reset password for this user" });
         }
 
-        const defaultPassword = 'meta@147';
+        if (!process.env.DEFAULT_USER_PASSWORD) {
+            return res.status(500).json({ message: 'Server configuration error: Default password not set' });
+        }
+        const defaultPassword = process.env.DEFAULT_USER_PASSWORD;
         const hashedPassword = await bcrypt.hash(defaultPassword, 10);
 
         await prisma.user.update({

@@ -1,4 +1,5 @@
-
+import dotenv from 'dotenv';
+dotenv.config();
 
 const API_URL = 'http://localhost:3000';
 
@@ -7,7 +8,7 @@ async function login(email: string) {
         const res = await fetch(`${API_URL}/auth/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password: 'meta@147' })
+            body: JSON.stringify({ email, password: process.env.DEFAULT_USER_PASSWORD || (() => { throw new Error('DEFAULT_USER_PASSWORD is not set in .env'); })() })
         });
         const data = await res.json() as any;
         if (!res.ok) throw new Error(data.message);

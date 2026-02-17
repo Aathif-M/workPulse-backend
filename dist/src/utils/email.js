@@ -30,7 +30,7 @@ const sendViolationEmail = async (recipients, data) => {
             <p><strong>Expected Duration:</strong> ${data.expectedDuration} minutes</p>
             <p><strong>Actual Duration:</strong> ${data.actualDuration} minutes</p>
             <p style="color: #d9534f; font-weight: bold;"><strong>Violation Overstay:</strong> ${data.violationDuration} minutes</p>
-            <p>Log in to <a href="https://workpulse.us">WorkPulse</a> for more details.</p>
+            <p>Log in to <a href="https://metacorpsolutions.com">WorkPulse</a> for more details.</p>
             <br />
             <p><em>WorkPulse System</em></p>
         </div>
@@ -59,7 +59,7 @@ const sendViolationAlertEmail = async (recipients, data) => {
             <p><strong>Agent:</strong> ${data.agentName}</p>
             <p><strong>Break Type:</strong> ${data.breakType}</p>
             <hr />
-            <p>The above agent's break has reached its expected end time and is now overdue. Please visit <a href="https://workpulse.us">WorkPulse</a> to review the session.</p>
+            <p>The above agent's break has reached its expected end time and is now overdue. Please visit <a href="https://metacorpsolutions.com">WorkPulse</a> to review the session.</p>
             <br />
             <p><em>WorkPulse System</em></p>
         </div>

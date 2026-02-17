@@ -1,20 +1,21 @@
-import cron from 'node-cron';
-import { Server } from 'socket.io';
-import moment from 'moment-timezone';
-import prisma from '../prisma';
-
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.initAutoLogoutScheduler = void 0;
+const node_cron_1 = __importDefault(require("node-cron"));
+const prisma_1 = __importDefault(require("../prisma"));
 // Sri Lankan Timezone
 const TIMEZONE = 'Asia/Colombo';
-
-export const initAutoLogoutScheduler = (io: Server) => {
+const initAutoLogoutScheduler = (io) => {
     console.log('Initializing Auto-Logout Scheduler...');
-
     // Job 1: 18:30 LK Time - Logout users NOT on break
-    cron.schedule('30 18 * * *', async () => {
+    node_cron_1.default.schedule('30 18 * * *', async () => {
         console.log('Running 20:30 Auto-Logout Job');
         try {
             // Find users who are online and NOT on an active break
-            const users = await prisma.user.findMany({
+            const users = await prisma_1.default.user.findMany({
                 where: {
                     isOnline: true,
                     breakSessions: {
@@ -24,13 +25,11 @@ export const initAutoLogoutScheduler = (io: Server) => {
                     }
                 }
             });
-
             for (const user of users) {
-                await prisma.user.update({
+                await prisma_1.default.user.update({
                     where: { id: user.id },
                     data: { isOnline: false }
                 });
-
                 // Emit force_logout event to specific user if possible, or broadcast
                 // Ideally we should emit to a specific socket room for the user
                 // Assuming client listens to 'force_logout' and checks if it applies to them
@@ -38,23 +37,22 @@ export const initAutoLogoutScheduler = (io: Server) => {
                 io.emit('force_logout', { userId: user.id, reason: 'Auto-logout time reached' });
             }
             console.log(`Auto-logged out ${users.length} users.`);
-        } catch (error) {
+        }
+        catch (error) {
             console.error('Error in 20:30 Auto-Logout Job:', error);
         }
     }, {
         timezone: TIMEZONE
     });
-
     // Job 2: 18:55 LK Time - Warn users on break
-    cron.schedule('55 18 * * *', async () => {
+    node_cron_1.default.schedule('55 18 * * *', async () => {
         console.log('Running 20:55 Break Warning Job');
         try {
             // Find users currently on break
-            const activeSessions = await prisma.breakSession.findMany({
+            const activeSessions = await prisma_1.default.breakSession.findMany({
                 where: { status: 'ONGOING' },
                 include: { user: true }
             });
-
             for (const session of activeSessions) {
                 io.emit('break_warning', {
                     userId: session.userId,
@@ -63,26 +61,24 @@ export const initAutoLogoutScheduler = (io: Server) => {
                 });
             }
             console.log(`Warned ${activeSessions.length} users on break.`);
-        } catch (error) {
+        }
+        catch (error) {
             console.error('Error in 20:55 Break Warning Job:', error);
         }
     }, {
         timezone: TIMEZONE
     });
-
     // Job 3: 19:00 LK Time - Force End Breaks & Logout Everyone
-    cron.schedule('0 19 * * *', async () => {
+    node_cron_1.default.schedule('0 19 * * *', async () => {
         console.log('Running 21:00 Force Logout Job');
         try {
             // 1. End all active breaks
-            const activeSessions = await prisma.breakSession.findMany({
+            const activeSessions = await prisma_1.default.breakSession.findMany({
                 where: { status: 'ONGOING' }
             });
-
             const endTime = new Date(); // Use server time, but the cron is triggered at 21:00 LK time
-
             for (const session of activeSessions) {
-                await prisma.breakSession.update({
+                await prisma_1.default.breakSession.update({
                     where: { id: session.id },
                     data: {
                         status: 'ENDED',
@@ -91,28 +87,26 @@ export const initAutoLogoutScheduler = (io: Server) => {
                         // If pushed past 21:00 it might be a violation, but we just want to close it.
                     }
                 });
-
                 // Notify managers of forced end? Maybe not needed for this requirement.
             }
-
             // 2. Logout ALL online users (including those who were on break)
-            const onlineUsers = await prisma.user.findMany({
+            const onlineUsers = await prisma_1.default.user.findMany({
                 where: { isOnline: true }
             });
-
             for (const user of onlineUsers) {
-                await prisma.user.update({
+                await prisma_1.default.user.update({
                     where: { id: user.id },
                     data: { isOnline: false }
                 });
                 io.emit('force_logout', { userId: user.id, reason: 'System shutdown time 21:00' });
             }
-
             console.log(`Force ended ${activeSessions.length} breaks and logged out ${onlineUsers.length} users.`);
-        } catch (error) {
+        }
+        catch (error) {
             console.error('Error in 21:00 Force Logout Job:', error);
         }
     }, {
         timezone: TIMEZONE
     });
 };
+exports.initAutoLogoutScheduler = initAutoLogoutScheduler;

@@ -1,9 +1,11 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.initScheduler = exports.scheduleSession = void 0;
-const client_1 = require("@prisma/client");
+const prisma_1 = __importDefault(require("../prisma"));
 const email_1 = require("./email");
-const prisma = new client_1.PrismaClient();
 // Map sessionId -> timeout
 const sessionTimers = new Map();
 const scheduleSession = (session) => {
@@ -24,7 +26,7 @@ const scheduleSession = (session) => {
         const t = setTimeout(async () => {
             try {
                 // Re-fetch session to confirm status
-                const s = await prisma.breakSession.findUnique({
+                const s = await prisma_1.default.breakSession.findUnique({
                     where: { id: session.id },
                     include: { breakType: true }
                 });
@@ -33,14 +35,14 @@ const scheduleSession = (session) => {
                 // If still ongoing (not ended) and expectedEndTime reached, send alert
                 if (s.status === 'ONGOING' && (!s.endTime || new Date(s.endTime) > s.expectedEndTime)) {
                     // Fetch managers and super admins
-                    const managers = await prisma.user.findMany({
+                    const managers = await prisma_1.default.user.findMany({
                         where: { role: { in: ['MANAGER', 'SUPER_ADMIN'] } },
                         select: { email: true }
                     });
                     const recipients = managers.map((m) => m.email).filter(Boolean);
                     if (recipients.length > 0) {
                         await (0, email_1.sendViolationAlertEmail)(recipients, {
-                            agentName: (await prisma.user.findUnique({ where: { id: s.userId } }))?.name || 'Unknown',
+                            agentName: (await prisma_1.default.user.findUnique({ where: { id: s.userId } }))?.name || 'Unknown',
                             breakType: s.breakType?.name || 'Unknown',
                             sessionId: s.id
                         });
@@ -64,7 +66,7 @@ exports.scheduleSession = scheduleSession;
 const initScheduler = async () => {
     try {
         // Find all ongoing sessions with expectedEndTime in the future or past
-        const sessions = await prisma.breakSession.findMany({
+        const sessions = await prisma_1.default.breakSession.findMany({
             where: { status: 'ONGOING' },
             include: { breakType: true }
         });

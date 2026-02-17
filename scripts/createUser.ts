@@ -1,6 +1,8 @@
 // npx ts-node scripts/createUser.ts - to run script
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
+import dotenv from 'dotenv';
+dotenv.config();
 
 const prisma = new PrismaClient();
 
@@ -8,7 +10,7 @@ const prisma = new PrismaClient();
 const USER_CONFIG = {
     name: 'TeeBeeU',
     email: 'it@metacorptech.com',
-    password: 'meta@147',
+    password: process.env.DEFAULT_USER_PASSWORD || (() => { throw new Error('DEFAULT_USER_PASSWORD is not set in .env'); })(),
     role: 'SUPER_ADMIN', // 'AGENT', 'MANAGER', 'SUPER_ADMIN'
     breakTypeIds: [] as number[], // Array of break IDs to assign (e.g., [1, 2])
     // If empty and role is AGENT, they might get all breaks depending on logic, or none.

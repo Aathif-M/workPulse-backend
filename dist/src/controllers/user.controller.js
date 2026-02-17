@@ -23,7 +23,10 @@ const createUser = async (req, res) => {
         if (role === client_1.Role.SUPER_ADMIN) {
             return res.status(403).json({ message: 'Cannot create Super Admin' });
         }
-        const defaultPassword = 'meta@147';
+        if (!process.env.DEFAULT_USER_PASSWORD) {
+            return res.status(500).json({ message: 'Server configuration error: Default password not set' });
+        }
+        const defaultPassword = process.env.DEFAULT_USER_PASSWORD;
         const hashedPassword = await bcryptjs_1.default.hash(defaultPassword, 10);
         const user = await prisma.user.create({
             data: {
@@ -152,7 +155,10 @@ const resetPassword = async (req, res) => {
         if ((targetUser.role === 'ADMIN' || targetUser.role === 'SUPER_ADMIN') && req.userRole !== 'SUPER_ADMIN') {
             return res.status(403).json({ message: "Access Denied: Cannot reset password for this user" });
         }
-        const defaultPassword = 'meta@147';
+        if (!process.env.DEFAULT_USER_PASSWORD) {
+            return res.status(500).json({ message: 'Server configuration error: Default password not set' });
+        }
+        const defaultPassword = process.env.DEFAULT_USER_PASSWORD;
         const hashedPassword = await bcryptjs_1.default.hash(defaultPassword, 10);
         await prisma.user.update({
             where: { id: parseInt(id) },

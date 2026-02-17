@@ -7,8 +7,13 @@ process.env.TZ = 'Asia/Kolkata';
 console.log('Server time:', new Date().toString());
 const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config({ override: true });
-const client_1 = require("@prisma/client");
-const prisma = new client_1.PrismaClient();
+const prisma_1 = __importDefault(require("./prisma"));
+process.on('uncaughtException', (err) => {
+    console.error('Uncaught Exception:', err);
+});
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});
 const express_1 = __importDefault(require("express"));
 const http_1 = __importDefault(require("http"));
 const socket_io_1 = require("socket.io");
@@ -17,11 +22,12 @@ const auth_routes_1 = __importDefault(require("./routes/auth.routes"));
 const user_routes_1 = __importDefault(require("./routes/user.routes"));
 const break_routes_1 = __importDefault(require("./routes/break.routes"));
 const violationScheduler_1 = require("./utils/violationScheduler");
+const scheduler_1 = require("./utils/scheduler");
 const app = (0, express_1.default)();
 const server = http_1.default.createServer(app);
 const io = new socket_io_1.Server(server, {
     cors: {
-        origin: "https://workpulse.us", // Allow all for now, restrict in production
+        origin: ['https://metacorpsolutions.com', 'https://www.metacorpsolutions.com'],
         credentials: true,
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
     }
@@ -29,8 +35,13 @@ const io = new socket_io_1.Server(server, {
 // Make io available in routes
 app.set('io', io);
 // CORS configuration
+app.use((req, res, next) => {
+    console.log(`[${new Date().toISOString()}] ${req.method} ${req.url} - Origin: ${req.headers.origin}`);
+    next();
+});
+// CORS configuration
 app.use((0, cors_1.default)({
-    origin: ['https://workpulse.us', 'https://www.workpulse.us', 'http://localhost:5173', 'http://localhost:3000'],
+    origin: ['https://metacorpsolutions.com', 'https://www.metacorpsolutions.com', 'http://localhost:5173', 'http://localhost:3000', 'https://api.metacorpsolutions.com'],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin']
@@ -49,7 +60,7 @@ io.on('connection', async (socket) => {
     const userId = socket.handshake.query.userId;
     if (userId) {
         try {
-            await prisma.user.update({
+            await prisma_1.default.user.update({
                 where: { id: Number(userId) },
                 data: { isOnline: true }
             });
@@ -67,7 +78,7 @@ io.on('connection', async (socket) => {
         console.log('User disconnected:', socket.id);
         if (userId) {
             try {
-                await prisma.user.update({
+                await prisma_1.default.user.update({
                     where: { id: Number(userId) },
                     data: { isOnline: false }
                 });
@@ -84,4 +95,6 @@ server.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
     // Initialize violation scheduler for ongoing sessions
     (0, violationScheduler_1.initScheduler)().catch(e => console.error('Violation scheduler init failed:', e));
+    // Initialize Auto-Logout Scheduler
+    (0, scheduler_1.initAutoLogoutScheduler)(io);
 });

@@ -1,7 +1,5 @@
-import { PrismaClient } from '@prisma/client';
+import prisma from '../prisma';
 import { sendViolationAlertEmail } from './email';
-
-const prisma = new PrismaClient();
 
 // Map sessionId -> timeout
 const sessionTimers: Map<number, NodeJS.Timeout> = new Map();

@@ -1,0 +1,10 @@
+
+> backend@1.0.0 dev
+> npx nodemon --watch "src/**" --ext "ts,json" --ignore "src/**/*.spec.ts" --exec "npx ts-node" src/server.ts
+
+[33m[nodemon] 3.1.11[39m
+[33m[nodemon] to restart at any time, enter `rs`[39m
+[33m[nodemon] watching path(s): src/**[39m
+[33m[nodemon] watching extensions: ts,json[39m
+[32m[nodemon] starting `npx ts-node src/server.ts`[39m
+[31m[nodemon] app crashed - waiting for file changes before starting...[39m

@@ -3,8 +3,15 @@ console.log('Server time:', new Date().toString());
 
 import dotenv from 'dotenv';
 dotenv.config({ override: true });
-import { PrismaClient } from '@prisma/client';
-const prisma = new PrismaClient();
+import prisma from './prisma';
+
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception:', err);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});
 import express, { Request, Response } from 'express';
 import http from 'http';
 import { Server } from 'socket.io';
@@ -20,7 +27,7 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "https://workpulse.us", // Allow all for now, restrict in production
+    origin: ['https://metacorpsolutions.com', 'https://www.metacorpsolutions.com'],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
   }
@@ -30,8 +37,14 @@ const io = new Server(server, {
 app.set('io', io);
 
 // CORS configuration
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url} - Origin: ${req.headers.origin}`);
+  next();
+});
+
+// CORS configuration
 app.use(cors({
-  origin: ['https://workpulse.us', 'https://www.workpulse.us', 'http://localhost:5173', 'http://localhost:3000'],
+  origin: ['https://metacorpsolutions.com', 'https://www.metacorpsolutions.com', 'http://localhost:5173', 'http://localhost:3000', 'https://api.metacorpsolutions.com'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin']

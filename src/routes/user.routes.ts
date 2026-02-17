@@ -1,27 +1,9 @@
 import express, { Request, Response, NextFunction } from 'express';
 import { createUser, getUsers, updateUser, deleteUser, resetPassword } from '../controllers/user.controller';
-import { verifyToken, AuthRequest } from '../controllers/auth.controller';
+import { verifyToken, hasReadAccess, hasWriteAccess } from '../middleware/auth.middleware';
+import { AuthRequest } from '../types';
 
 const router = express.Router();
-
-// Middleware for Read Access (View Dashboard, Users, etc.)
-const hasReadAccess = (req: AuthRequest, res: Response, next: NextFunction) => {
-    if (['MANAGER', 'SUPER_ADMIN', 'ADMIN'].includes(req.userRole || '')) {
-        next();
-    } else {
-        res.status(403).json({ message: 'Access denied' });
-    }
-};
-
-// Middleware for Write Access (Create/Edit/Delete Users)
-const hasWriteAccess = (req: AuthRequest, res: Response, next: NextFunction) => {
-    // Admin is Read-Only
-    if (['MANAGER', 'SUPER_ADMIN'].includes(req.userRole || '')) {
-        next();
-    } else {
-        res.status(403).json({ message: 'Access Denied: Read-only permissions' });
-    }
-};
 
 router.use(verifyToken as express.RequestHandler);
 router.use(hasReadAccess as express.RequestHandler);

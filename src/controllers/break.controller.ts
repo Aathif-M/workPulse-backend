@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
-import { AuthRequest } from './auth.controller';
+import { AuthRequest } from '../types';
 import { Server } from 'socket.io';
 import { sendViolationEmail } from '../utils/email';
 import { scheduleSession } from '../utils/violationScheduler';

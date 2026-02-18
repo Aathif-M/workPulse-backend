@@ -8,8 +8,8 @@ const prisma = new PrismaClient();
 
 // Configuration for the new user
 const USER_CONFIG = {
-    name: 'TeeBeeU',
-    email: 'it@metacorptech.com',
+    name: 'Super Admin',
+    email: 'admin@metacorpsolutions.com',
     password: process.env.DEFAULT_USER_PASSWORD || (() => { throw new Error('DEFAULT_USER_PASSWORD is not set in .env'); })(),
     role: 'SUPER_ADMIN', // 'AGENT', 'MANAGER', 'SUPER_ADMIN'
     breakTypeIds: [] as number[], // Array of break IDs to assign (e.g., [1, 2])

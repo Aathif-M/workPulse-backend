@@ -27,7 +27,7 @@ const app = (0, express_1.default)();
 const server = http_1.default.createServer(app);
 const io = new socket_io_1.Server(server, {
     cors: {
-        origin: ['https://metacorpsolutions.com', 'https://www.metacorpsolutions.com'],
+        origin: ['https://yuniqa.com', 'https://www.yuniqa.com'],
         credentials: true,
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
     }
@@ -41,7 +41,7 @@ app.use((req, res, next) => {
 });
 // CORS configuration
 app.use((0, cors_1.default)({
-    origin: ['https://metacorpsolutions.com', 'https://www.metacorpsolutions.com', 'http://localhost:5173', 'http://localhost:3000', 'https://api.metacorpsolutions.com'],
+    origin: ['https://yuniqa.com', 'https://www.yuniqa.com', 'http://localhost:5173', 'http://localhost:3000', 'https://api.yuniqa.com'],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin']
